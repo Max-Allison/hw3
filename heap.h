@@ -2,6 +2,8 @@
 #define HEAP_H
 #include <functional>
 #include <stdexcept>
+#include <vector>
+#include <utility>
 
 template <typename T, typename PComparator = std::less<T> >
 class Heap
@@ -21,7 +23,7 @@ public:
   * @brief Destroy the Heap object
   * 
   */
-  ~Heap();
+  ~Heap() = default;
 
   /**
    * @brief Push an item to the heap
@@ -61,8 +63,9 @@ public:
 
 private:
   /// Add whatever helper functions and data members you need below
-
-
+  std::vector<T> heap;
+  int m;
+  PComparator c;
 
 
 };
@@ -81,11 +84,12 @@ T const & Heap<T,PComparator>::top() const
     // ================================
     // throw the appropriate exception
     // ================================
-
+    throw std::underflow_error("Heap Empty");
 
   }
   // If we get here we know the heap has at least 1 item
   // Add code to return the top element
+  return heap[0];
 
 
 
@@ -101,15 +105,71 @@ void Heap<T,PComparator>::pop()
     // ================================
     // throw the appropriate exception
     // ================================
+    throw std::underflow_error("Heap Empty");
 
+  }
+  heap[0] = heap.back();
+  heap.pop_back();
 
+  if (empty()) {
+    return;
   }
 
 
+  size_t parent = 0;
 
+  while (parent < heap.size()) {
+    size_t bestChild = parent;
+
+    for (int i = 1; i <= m; i++) {
+      size_t child = m * parent + i;
+
+      if (child >= heap.size()) {
+        break;
+      }
+
+      if (c(heap[child], heap[bestChild])) {
+        bestChild = child;
+      }
+    }
+
+    if (bestChild == parent) {
+      break;
+    }
+
+    std::swap(heap[parent], heap[bestChild]);
+    parent = bestChild;
+  }
 }
 
+template <typename T, typename PComparator>
+void Heap<T,PComparator>::push(const T& item) {
+  heap.push_back(item);
+  size_t current = heap.size() - 1;
 
+  while (current > 0) {
+    size_t parent = (current - 1) / m;
+    if (c(heap[current], heap[parent])) {
+      std::swap(heap[parent], heap[current]);
+      current = parent;
+    } else {
+      break;
+    }
+  }
+}
+
+template <typename T, typename PComparator>
+bool Heap<T,PComparator>::empty() const {
+  return heap.empty();
+}
+
+template <typename T, typename PComparator>
+size_t Heap<T,PComparator>::size() const {
+  return heap.size();
+}
+
+template <typename T, typename PComparator>
+Heap<T,PComparator>::Heap(int m, PComparator c) : m(m), c(c) {}
 
 #endif
 
